@@ -5,8 +5,12 @@ int main(int argc,char **argv)
 {
 	e	*E;
 	pts	pt;
-	int	k;
+	int	q,r;
 	int	i,j;
+	int	idx_i, idx_j;
+	int	min_j, max_j;
+	int	count;
+	double	dist, min_dist;
 
 	// malloc the work struct
 	E = malloc(sizeof(e));
@@ -52,8 +56,8 @@ int main(int argc,char **argv)
 
 		// testing print the xml arrays to a text file
 		for(i=0;i<E->n_ens;i++){
-			fprintf(E->outFile,"#Ensemble number = %d", i);
-			fprintf(E->outFile,"## validTime latitude longitude max_speed max_radius vortexParameters");
+			//fprintf(E->outFile,"#Ensemble number = %d\n", i);
+			//fprintf(E->outFile,"## validTime latitude longitude max_speed max_radius vortexParameters\n");
 			for(j=0;j<E->three_days;j++){
 				fprintf(E->outFile,"%f %f %f %f %f %f\n", E->ens_juldates[i][j], E->ens_lat[i][j], E->ens_lon[i][j],
 			 																				E->ens_max_speed[i][j], E->ens_max_radius[i][j], E->ens_vortexParameters[i][j]);
@@ -84,7 +88,7 @@ int main(int argc,char **argv)
 		for(i=0;i<E->n_ens;i++){
 			for(j=0;j<E->three_days;j++){
 				if(E->is_inside[i][j] == TRUE)
-	    		fprintf(ini,"%f %f %d\n", E->ens_lon[i][j], E->ens_lat[i][j]);
+	    		fprintf(ini,"%f %f\n", E->ens_lon[i][j], E->ens_lat[i][j]);
 			}
 			fprintf(ini,"\n");
 	  }
@@ -92,12 +96,81 @@ int main(int argc,char **argv)
 
 		// now, for each point iside the polygon find the closest grid point to the
 		// min and max latitudes and longitudes from the track point swarm
+		E->min_lon = 99999.0;
+		E->max_lon = -99999.0;
+		E->min_lat = 99999.0;
+		E->max_lat = -99999.0;
+		count = 0;
+		for(i=0;i<E->n_ens;i++){
+			for(j=0;j<E->three_days;j++){
+				if(E->is_inside[i][j] == TRUE){
+					 count++;
+	    		 if(E->ens_lon[i][j] < E->min_lon) E->min_lon = E->ens_lon[i][j];
+					 if(E->ens_lon[i][j] > E->max_lon) E->max_lon = E->ens_lon[i][j];
+					 if(E->ens_lat[i][j] < E->min_lat) E->min_lat = E->ens_lat[i][j];
+					 if(E->ens_lat[i][j] > E->max_lat) E->max_lat = E->ens_lat[i][j];
+				}
+			}
+	  }
+		printf("min lon = %f, max lon = %f\n", E->min_lon, E->max_lon);
+		printf("min lat = %f, max lat = %f\n", E->min_lat, E->max_lat);
+		E->number_of_points_inside = count;
+		printf("number of points inside = %d\n", E->number_of_points_inside);
+		E->i_index = malloc(E->number_of_points_inside*sizeof(int));
+		E->j_index = malloc(E->number_of_points_inside*sizeof(int));
 
-		// once we have the min and max coords, find the source grid i,j indexes for these points.
-		// for this case we only really need the i index
+
+
+		// use the kdtree to find the closes roms_grid point to the current track point
+		// store the index of this point
+		count = 0;
+		min_j = 32768;
+		max_j = 0;
+		double	pos[2];
+		grid_index		*idx;
+		for(i=0;i<E->n_ens;i++){
+			for(j=0;j<E->three_days;j++){
+				if(E->is_inside[i][j] == TRUE){
+				 	pos[0] = E->ens_lon[i][j];
+					pos[1] = E->ens_lat[i][j];
+					E->set = kd_nearest_range(E->kd, pos, 0.1);	// make the .05 dynamic
+					//printf("##point %d (of %d) ## search around track point %f, %f returned %d roms grid items\n", count,E->number_of_points_inside,pos[0], pos[1], kd_res_size(E->set));
+					while( !kd_res_end( E->set ) ) {
+				    // get the data and position of the current result item
+				    idx = (grid_index*)kd_res_item( E->set, pos );
+
+				    // compute the distance of the current result from the pt
+				    //dist = sqrt( dist_sq( pt, pos, 2 ) );
+
+				    // print out the retrieved data
+				    //printf( "pos at (%.3f, %.3f) idx = %d %d\n", pos[0], pos[1], idx->i, idx->j );
+
+
+						// store the smallest index
+						if(idx->j < min_j) min_j = idx->j;
+						// store the biggest index
+						if(idx->j > max_j) max_j = idx->j;
+
+				    // go to the next entry
+				    kd_res_next( E->set );
+				}
+				count++;
+		 	 //printf("count = %d (outof %d total)\n", count, E->number_of_points_inside);
+ 			}
+		}
+	}
+
+
+
+		printf("min index = %d, max index = %d\n", min_j, max_j);
+
+		printf("ncks -d xi_rho,%d,%d -d eta_rho,0,%d %s -O cut.nc\n", min_j, max_j, E->nLonRho-1, E->roms_grid);
 
 
 		printf("plot \"AustraliaContinentOutline.txt\" u 2:1 w l, \"%s\" u 3:2 w l\n", E->output_file);
+
+		kd_res_free(E->set);
+		kd_free(E->kd);
 
   	return 0;
 }

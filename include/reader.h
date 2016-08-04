@@ -11,7 +11,7 @@
 #include <libxml/parser.h>
 
 #include <netcdf.h>
-
+#include "kdtree.h"
 #include "jutil.h"
 
 // macros
@@ -26,6 +26,10 @@
 
 #define fail(...) grid_fail(__LINE__,__func__,__FILE__,__VA_ARGS__)
 
+typedef struct{
+	int	i;
+	int	j;
+}grid_index;
 
 typedef struct{
 
@@ -52,6 +56,7 @@ typedef struct{
 	int		n_ens;
 	int		track_length;
 	int		three_days;
+	int		number_of_points_inside;
 
 	double	**ens_juldates;
 	float	**ens_lat;
@@ -61,12 +66,16 @@ typedef struct{
 	float	**ens_vortexParameters;
 	int		**is_inside;
 
-/*
+	int		*i_index;
+	int		*j_index;
+
+
 	float		max_lat;
 	float		max_lon;
 	float		min_lon;
 	float		min_lat;
 
+/*
 	float		max_lat_xing;
 	float		max_lon_xing;
 	float		min_lon_xing;
@@ -87,6 +96,12 @@ typedef struct{
 
 	pts			*polygon;
 	int			ncoords;
+
+	// kdtree stuff
+	grid_index	*roms_index;
+	void *kd;
+	struct kdres *set;
+
 
 	/*
 	float		corner_lat;	// latitude (degrees) of bottom left corner of the grid

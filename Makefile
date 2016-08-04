@@ -22,7 +22,8 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)jutil.o \
 	$(CSRC)fail.o \
 	$(CSRC)netcdfIO.o\
-	$(CSRC)grid_cut.o
+	$(CSRC)grid_cut.o\
+	$(CSRC)kdtree.o
 
 OBJ=	$(COBJ) 
 

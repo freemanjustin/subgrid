@@ -7,6 +7,8 @@ void get_netcdf(e *E){
 	int retval;
 	size_t attlen = 0;
 
+  double  pos[2];
+
 
   int     i,j,t;
 	int count;
@@ -66,6 +68,24 @@ void get_netcdf(e *E){
 		fail("failed to read roms lat_rho data: error is %d\n", retval);
 
 	nc_close(ncid);
+
+
+  // construct the kdtree for grid searching
+  E->kd = kd_create(2);
+  E->roms_index = malloc(E->nLatRho*E->nLonRho*sizeof(grid_index));
+
+  count = 0;
+  for(i=0;i<E->nLonRho;i++){
+    for(j=0;j<E->nLatRho;j++){
+      E->roms_index[count].i = i;
+      E->roms_index[count].j = j;
+      pos[0] = E->lon_rho[i][j];
+      pos[1] = E->lat_rho[i][j];
+      kd_insert(E->kd, pos, &E->roms_index[count]);
+      count++;
+    }
+  }
+
 
 
 /*

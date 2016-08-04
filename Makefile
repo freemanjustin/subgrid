@@ -8,7 +8,7 @@ CC=	gcc
 
 CSRC=	./src/
 
-CFLAGS=	-O3 -g -Wall `/usr/bin/xml2-config --cflags`
+CFLAGS=	-O0 -g -Wall `/usr/bin/xml2-config --cflags`
 #CFLAGS=	-O3 -g -fPIC -Wall
 
 INC=	-I./include
@@ -21,7 +21,8 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)readXML.o \
 	$(CSRC)jutil.o \
 	$(CSRC)fail.o \
-	$(CSRC)netcdfIO.o
+	$(CSRC)netcdfIO.o\
+	$(CSRC)grid_cut.o
 
 OBJ=	$(COBJ) 
 

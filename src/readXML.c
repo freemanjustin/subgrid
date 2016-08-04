@@ -82,7 +82,6 @@ void get_params(e *E){
 
 	// second pass
 	// now actually read the data into the E struct
-	E->nEnsemble = 0;
 	doc = xmlParseFile(E->input_xml);
 
 	if (doc == NULL ) {
@@ -105,11 +104,13 @@ void get_params(e *E){
 	}
 
 	cur = cur->xmlChildrenNode;
+	E->nEnsemble = 0;
 	while (cur != NULL) {
 		if ((!xmlStrcmp(cur->name, (const xmlChar *) "data"))){
 
 						E->track_count = 0;
 
+						//printf("# doing Ensemble number = %d\n", E->nEnsemble);
             //fprintf(E->outFile,"#Ensemble number = %d\n", E->nEnsemble);
             //fprintf(E->outFile,"# validTime latitude longitude max_speed max_radius vortexParameters\n");
             //found_it = FALSE;
@@ -168,7 +169,7 @@ void _parseInputFile_ensemble (e *E, xmlDocPtr doc, xmlNodePtr cur) {
 	xmlChar *key;
 	cur = cur->xmlChildrenNode;
 	while (cur != NULL) {
-		if((!xmlStrcmp(cur->name, (const xmlChar *) "numMembers"))){// coordinates of polygon
+		if((!xmlStrcmp(cur->name, (const xmlChar *) "numMembers"))){// how many ensembles
 			key = lr_pack(xmlNodeListGetString(doc, cur->xmlChildrenNode, 1));
 			sscanf((char*)key,"%d\n", &E->n_ens);
 			xmlFree(key);
@@ -222,34 +223,8 @@ void _parseInputFile_disturbance (e *E, xmlDocPtr doc, xmlNodePtr cur) {
 	cur = cur->xmlChildrenNode;
 	while (cur != NULL) {
 		if((!xmlStrcmp(cur->name, (const xmlChar *) "fix"))){// polygon
-
 			_parseInputFile_fix(E, doc, cur);
-
-			/*
-      if(beenHere == FALSE){
-        // get the origin point
-        E->origin_lat = this_pt.y;
-        E->origin_lon = this_pt.x;
-        beenHere = TRUE;
-      }
-
-      if(found_it == FALSE){
-        // find the crossing coordinate for this track
-        //time_steps++;
-
-        if(pnpoly(E->polygon, E->ncoords, this_pt)){
-          // this means that this point is inside the Australia polygon
-          // store it
-          if(this_pt.x > E->max_lon_xing) E->max_lon_xing = this_pt.x;
-          if(this_pt.x < E->min_lon_xing) E->min_lon_xing = this_pt.x;
-          if(this_pt.y > E->max_lat_xing) E->max_lat_xing = this_pt.y;
-          if(this_pt.y < E->min_lat_xing) E->min_lat_xing = this_pt.y;
-          found_it = TRUE;
-        }
-      }
-			*/
 		}
-
         cur = cur->next;
 	}
 
@@ -278,7 +253,7 @@ void _parseInputFile_fix(e *E, xmlDocPtr doc, xmlNodePtr cur){
 	xmlChar *key;
   float   value;
 	double	jday;
-  static int  beenHere = FALSE;
+  //static int  beenHere = FALSE;
 
   cur = cur->xmlChildrenNode;
 	while (cur != NULL) {
@@ -294,33 +269,29 @@ void _parseInputFile_fix(e *E, xmlDocPtr doc, xmlNodePtr cur){
 			julday(E->month, E->day, E->year, E->hour, E->minute, E->sec, &jday);
 			E->ens_juldates[E->nEnsemble][E->track_count] = jday;
 			//printf("this is julian date %f\n", E->juldate);
-			E->track_count++;
+			//E->track_count++;
 			xmlFree(key);
 		}
-        else if((!xmlStrcmp(cur->name, (const xmlChar *) "latitude"))){// coordinates of polygon
+    else if((!xmlStrcmp(cur->name, (const xmlChar *) "latitude"))){// coordinates of polygon
 			key = lr_pack(xmlNodeListGetString(doc, cur->xmlChildrenNode, 1));
 			//fprintf(E->outFile,"%s ", (char*)key);
       sscanf((char*)key,"%f\n", &value);
 
 			E->ens_lat[E->nEnsemble][E->track_count] = value;
+			//printf("in _parse_fix: E->nEnsemble = %d\n",E->nEnsemble);
+			//printf("in _parse_fix: E->track_count = %d", E->track_count);
+			//printf("in _parse_fix: E->ens_lat = %f\n", E->ens_lat[E->nEnsemble][E->track_count]);
 
-      //if(value > E->max_lat)  E->max_lat = value;
-      //if(value < E->min_lat)  E->min_lat = value;
-
-      //this_pt.y = value;
 			xmlFree(key);
 		}
-        else if((!xmlStrcmp(cur->name, (const xmlChar *) "longitude"))){// coordinates of polygon
+    else if((!xmlStrcmp(cur->name, (const xmlChar *) "longitude"))){// coordinates of polygon
 			key = lr_pack(xmlNodeListGetString(doc, cur->xmlChildrenNode, 1));
 			//fprintf(E->outFile,"%s ", (char*)key);
       sscanf((char*)key,"%f\n", &value);
 
 			E->ens_lon[E->nEnsemble][E->track_count] = value;
 
-      //if(value > E->max_lon)  E->max_lon = value;
-      //if(value < E->min_lon)  E->min_lon = value;
 
-      //this_pt.x = value;
 			xmlFree(key);
 		}
         else if((!xmlStrcmp(cur->name, (const xmlChar *) "cycloneData"))){// polygon
@@ -328,7 +299,7 @@ void _parseInputFile_fix(e *E, xmlDocPtr doc, xmlNodePtr cur){
 		}
 		cur = cur->next;
 	}
-    //fprintf(E->outFile,"\n");
+	E->track_count++;
 }
 
 void _parseInputFile_cycloneData(e *E, xmlDocPtr doc, xmlNodePtr cur){

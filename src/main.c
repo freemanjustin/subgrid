@@ -4,6 +4,7 @@
 int main(int argc,char **argv)
 {
 	e	*E;
+	pts	pt;
 	int	k;
 	int	i,j;
 
@@ -15,8 +16,8 @@ int main(int argc,char **argv)
     }
 
 	// parse command line arguments
-	if(argc < 3){
-		printf("need an input xml file and an output filename\n");
+	if(argc < 4){
+		printf("need an input TCxml file, a reference roms grid and an output (netcdf) filename\n");
         exit(1);
 	}
 	else{
@@ -32,21 +33,10 @@ int main(int argc,char **argv)
         exit(1);
     }
     E->nEnsemble = 0;
-		/*
-    E->max_lon = -999.0;
-    E->min_lon = 999.0;
-    E->max_lat = -999.0;
-    E->min_lat = 999.0;
-    E->max_radius = -999.0;
-    E->min_lat_xing = 999.0;
-    E->min_lon_xing = 999.0;
-    E->max_lat_xing = -999.0;
-    E->max_lon_xing = -999.0;
-		*/
+
 
     // read the reference grid information
     get_netcdf(E);
-
 
     // read the input xml file
 	  get_params(E);
@@ -54,17 +44,17 @@ int main(int argc,char **argv)
 		// figure out how many data points are in our 3 day track
 		float start_time = E->ens_juldates[0][0];
 		float	end_time = start_time + 3.0;
-		int	three_days = 0;
+		E->three_days = 0;
 		for(i=0;i<E->track_length;i++){
-			if(E->ens_juldates[0][i] < end_time) three_days++;
+			if(E->ens_juldates[0][i] < end_time) E->three_days++;
 		}
-		printf("three day track length = %d\n", three_days);
+		printf("three day track length = %d\n", E->three_days);
 
 		// testing print the xml arrays to a text file
 		for(i=0;i<E->n_ens;i++){
 			fprintf(E->outFile,"#Ensemble number = %d", i);
 			fprintf(E->outFile,"## validTime latitude longitude max_speed max_radius vortexParameters");
-			for(j=0;j<three_days;j++){
+			for(j=0;j<E->three_days;j++){
 				fprintf(E->outFile,"%f %f %f %f %f %f\n", E->ens_juldates[i][j], E->ens_lat[i][j], E->ens_lon[i][j],
 			 																				E->ens_max_speed[i][j], E->ens_max_radius[i][j], E->ens_vortexParameters[i][j]);
 			}
@@ -72,22 +62,40 @@ int main(int argc,char **argv)
 		}
 		fclose(E->outFile);
 
-		/*
-    printf("box params:\n");
-    printf("\tmin_lon = %f\n", E->min_lon);
-    printf("\tmax_lon = %f\n", E->max_lon);
-    printf("\tmin_lat = %f\n", E->min_lat);
-    printf("\tmax_lat = %f\n", E->max_lat);
-    printf("\tmax_radius = %f\n", E->max_radius);
+		// now have the three day track lenths, lat and lon positions of each
+		// also have the roms grid reference
+		// extract the boundary points of the roms grid
+		// we will use this as the first pass to see if a track lat, lon point is inside or outside the grid
+		get_grid_boundary(E);
 
-    printf("\nunset key\n");
-    printf("set arrow from %f,%f to %f,%f nohead\n", E->min_lon, E->min_lat, E->min_lon, E->max_lat);
-    printf("set arrow from %f,%f to %f,%f nohead\n", E->min_lon, E->min_lat, E->max_lon, E->min_lat);
-    printf("set arrow from %f,%f to %f,%f nohead\n", E->max_lon, E->min_lat, E->max_lon, E->max_lat);
-    printf("set arrow from %f,%f to %f,%f nohead\n",  E->min_lon, E->max_lat, E->max_lon, E->max_lat);
-    printf("plot \"AustraliaContinentOutline.txt\" u 2:1 w l, \"%s\" u 3:2 w l, \"< echo '%f %f'\", \"< echo '%f %f'\"\n", E->output_file, E->max_lon_xing, E->min_lat_xing, E->min_lon_xing, E->max_lat_xing);
-		*/
-  	//fclose(E->outFile);
+		// find all of the 3 day track points which are inside our polygon
+		E->is_inside = malloc2d_int(E->n_ens, E->three_days);
+		for(i=0;i<E->n_ens;i++){
+			for(j=0;j<E->three_days;j++){
+				//pnpoly(pts *polygon, int npol, pts p)
+				pt.x = E->ens_lon[i][j];
+				pt.y = E->ens_lat[i][j];
+				E->is_inside[i][j] = pnpoly(E->polygon, E->ncoords, pt);
+			}
+		}
+		// check with gnuplot
+	  FILE  *ini;
+	  ini = fopen("inside.txt","w");
+		for(i=0;i<E->n_ens;i++){
+			for(j=0;j<E->three_days;j++){
+				if(E->is_inside[i][j] == TRUE)
+	    		fprintf(ini,"%f %f %d\n", E->ens_lon[i][j], E->ens_lat[i][j]);
+			}
+			fprintf(ini,"\n");
+	  }
+	  fclose(ini);
+
+		// now, for each point iside the polygon find the closest grid point to the
+		// min and max latitudes and longitudes from the track point swarm
+
+		// once we have the min and max coords, find the source grid i,j indexes for these points.
+		// for this case we only really need the i index
+
 
 		printf("plot \"AustraliaContinentOutline.txt\" u 2:1 w l, \"%s\" u 3:2 w l\n", E->output_file);
 

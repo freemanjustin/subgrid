@@ -51,6 +51,7 @@ typedef struct{
 
 	int		n_ens;
 	int		track_length;
+	int		three_days;
 
 	double	**ens_juldates;
 	float	**ens_lat;
@@ -58,6 +59,7 @@ typedef struct{
 	float	**ens_max_speed;
 	float	**ens_max_radius;
 	float	**ens_vortexParameters;
+	int		**is_inside;
 
 /*
 	float		max_lat;
@@ -75,14 +77,16 @@ typedef struct{
 	float		origin_lat;
 	float		origin_lon;
 
-	pts			*polygon;
-	int			ncoords;
+
 */
 	// roms grid variables
 	size_t	nLatRho;
 	size_t	nLonRho;
 	double	**lat_rho;
 	double	**lon_rho;
+
+	pts			*polygon;
+	int			ncoords;
 
 	/*
 	float		corner_lat;	// latitude (degrees) of bottom left corner of the grid
@@ -122,4 +126,6 @@ void _parseInputFile_data_first_pass (e *E, xmlDocPtr doc, xmlNodePtr cur);
 void _parseInputFile_disturbance_first_pass (e *E, xmlDocPtr doc, xmlNodePtr cur);
 void _parseInputFile_fix_first_pass(e *E, xmlDocPtr doc, xmlNodePtr cur);
 
+// grid operations
 void cut_grid(e *E);
+void get_grid_boundary(e *E);

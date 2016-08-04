@@ -69,48 +69,26 @@ typedef struct{
 	int		*i_index;
 	int		*j_index;
 
-
 	float		max_lat;
 	float		max_lon;
 	float		min_lon;
 	float		min_lat;
 
-/*
-	float		max_lat_xing;
-	float		max_lon_xing;
-	float		min_lon_xing;
-	float		min_lat_xing;
-
-	float		max_radius;
-
-	float		origin_lat;
-	float		origin_lon;
-
-
-*/
 	// roms grid variables
-	size_t	nLatRho;
-	size_t	nLonRho;
+	size_t	nEtaRho;
+	size_t	nXiRho;
 	double	**lat_rho;
 	double	**lon_rho;
 
 	pts			*polygon;
 	int			ncoords;
+	double	average_distance_per_index;
+	double			padding;
 
 	// kdtree stuff
 	grid_index	*roms_index;
 	void *kd;
 	struct kdres *set;
-
-
-	/*
-	float		corner_lat;	// latitude (degrees) of bottom left corner of the grid
-	float		corner_lon;	// longitude (degrees) of bottom left corner of the grid
-	float		width;		// width of domain in metres
-	float		length;		// length of domain in metres
-	float		angle;	// angle to rotate the grid counter-clockwise
-	float		resolution;	// grid cell resolutoin in metres
-	*/
 
 }e;
 

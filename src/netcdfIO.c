@@ -36,26 +36,26 @@ void get_netcdf(e *E){
         fail("failed to open roms input file: %s error is %d\n", E->roms_grid, retval);
 
     // get the lat dimension sizes
-    if((retval = nc_inq_dimid(ncid, "xi_rho", &varid)))
+    if((retval = nc_inq_dimid(ncid, "eta_rho", &varid)))
         fail("failed to get roms lat dimid: error is %d\n",retval);
 
-    if((retval = nc_inq_dimlen(ncid,varid,&E->nLatRho)))
+    if((retval = nc_inq_dimlen(ncid,varid,&E->nEtaRho)))
         fail("failed to get roms lat dimid: error is %d\n",retval);
 
-    //printf("xi_rho = %zu\n", E->nLatRho);
+    //printf("xi_rho = %zu\n", E->nEtaRho);
 
     // get the lon dimension sizes
-    if((retval = nc_inq_dimid(ncid, "eta_rho", &varid)))
+    if((retval = nc_inq_dimid(ncid, "xi_rho", &varid)))
         fail("failed to get roms lon_rho dimid: error is %d\n",retval);
 
-    if((retval = nc_inq_dimlen(ncid,varid,&E->nLonRho)))
+    if((retval = nc_inq_dimlen(ncid,varid,&E->nXiRho)))
         fail("failed to read roms lon_rho data: error is %d\n",retval);
 
-    //printf("eta_rho = %zu\n", E->nLonRho);
+    //printf("eta_rho = %zu\n", E->nXiRho);
 
     // malloc room for the arrays
-	E->lat_rho = malloc2d_double(E->nLonRho, E->nLatRho);
-	E->lon_rho = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->lat_rho = malloc2d_double( E->nEtaRho, E->nXiRho);
+	E->lon_rho = malloc2d_double( E->nEtaRho, E->nXiRho);
 
   nc_inq_varid(ncid, "lat_rho", &varid);
   if((retval = nc_get_var_double(ncid, varid, &E->lat_rho[0][0])))
@@ -72,11 +72,11 @@ void get_netcdf(e *E){
 
   // construct the kdtree for grid searching
   E->kd = kd_create(2);
-  E->roms_index = malloc(E->nLatRho*E->nLonRho*sizeof(grid_index));
+  E->roms_index = malloc(E->nEtaRho*E->nXiRho*sizeof(grid_index));
 
   count = 0;
-  for(i=0;i<E->nLonRho;i++){
-    for(j=0;j<E->nLatRho;j++){
+  for(i=0;i<E->nEtaRho;i++){
+    for(j=0;j<E->nXiRho;j++){
       E->roms_index[count].i = i;
       E->roms_index[count].j = j;
       pos[0] = E->lon_rho[i][j];
@@ -85,29 +85,4 @@ void get_netcdf(e *E){
       count++;
     }
   }
-
-
-
-/*
-    // find min and max longitude and latitudes for the roms data
-    E->roms_min_lat = 9999.0; E->roms_max_lat = -99999.0;
-    E->roms_min_lon = 9999.0; E->roms_max_lon = -99999.0;
-
-    for(i=0;i<E->nLonRho;i++){
-		for(j=0;j<E->nLatRho;j++){
-			if(E->lon_rho[i][j] < E->roms_min_lon)
-                E->roms_min_lon = E->lon_rho[i][j];
-            if(E->lon_rho[i][j] > E->roms_max_lon)
-                E->roms_max_lon = E->lon_rho[i][j];
-            if(E->lat_rho[i][j] < E->roms_min_lat)
-                E->roms_min_lat = E->lat_rho[i][j];
-            if(E->lat_rho[i][j] > E->roms_max_lat)
-                E->roms_max_lat = E->lat_rho[i][j];
-		}
-	}
-
-    printf("spatial bounds from roms file:\n");
-    printf("\tlon: %f to %f\n", E->roms_min_lon, E->roms_max_lon);
-    printf("\tlat: %f to %f\n", E->roms_min_lat, E->roms_max_lat);
-    */
 }

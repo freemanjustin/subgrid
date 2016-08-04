@@ -86,7 +86,7 @@ for i in range(0,1):
     #cbar = fig1.colorbar(cax)
     #cbar.ax.tick_params(labelsize=14)
 
-    data = np.loadtxt('ita.txt',dtype=np.str,delimiter=' ')
+    data = np.loadtxt('tracks.dat',dtype=np.str,delimiter=' ')
     color=iter(cm.gist_ncar(np.linspace(0,1,1001)))
     for j in range(0, 1000):
         start = (j*72)

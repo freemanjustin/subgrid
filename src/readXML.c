@@ -1,12 +1,6 @@
 #include "reader.h"
 
-/*
-pts this_pt;
 
-static int  found_it;
-
-static int  beenHere;
-*/
 static int	done_it;
 static int	track_count;
 
@@ -68,8 +62,8 @@ void get_params(e *E){
 	xmlFreeDoc(doc);
 
 	//printf("done 1st pass\n");
-	printf("number of ensembles in file %d\n", E->n_ens);
-	printf("tracklength is  %d\n", E->track_length);
+	//printf("number of ensembles in file %d\n", E->n_ens);
+	//printf("tracklength is  %d\n", E->track_length);
 
 	// malloc arrays to store xml data
 	E->ens_juldates = malloc2d_double(E->n_ens, E->track_length);

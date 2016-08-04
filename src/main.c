@@ -1,4 +1,3 @@
-
 #include "reader.h"
 
 int main(int argc,char **argv)
@@ -11,6 +10,10 @@ int main(int argc,char **argv)
 	int	min_j, max_j;
 	int	count;
 	double	dist, min_dist;
+	char	cut_string[256];
+	FILE	*tracks;
+	double	pos[2];
+	grid_index		*idx;
 
 	// malloc the work struct
 	E = malloc(sizeof(e));
@@ -31,11 +34,13 @@ int main(int argc,char **argv)
 	}
 
     // initialize struct members
-    E->outFile = fopen(E->output_file, "w");
-    if(E->outFile == NULL){
+
+    tracks = fopen("tracks.dat", "w");
+    if(tracks == NULL){
         printf("could't create output file\n");
         exit(1);
     }
+
     E->nEnsemble = 0;
 
 
@@ -52,19 +57,20 @@ int main(int argc,char **argv)
 		for(i=0;i<E->track_length;i++){
 			if(E->ens_juldates[0][i] < end_time) E->three_days++;
 		}
-		printf("three day track length = %d\n", E->three_days);
+		//printf("three day track length = %d\n", E->three_days);
 
 		// testing print the xml arrays to a text file
 		for(i=0;i<E->n_ens;i++){
 			//fprintf(E->outFile,"#Ensemble number = %d\n", i);
 			//fprintf(E->outFile,"## validTime latitude longitude max_speed max_radius vortexParameters\n");
 			for(j=0;j<E->three_days;j++){
-				fprintf(E->outFile,"%f %f %f %f %f %f\n", E->ens_juldates[i][j], E->ens_lat[i][j], E->ens_lon[i][j],
+				fprintf(tracks,"%f %f %f %f %f %f\n", E->ens_juldates[i][j], E->ens_lat[i][j], E->ens_lon[i][j],
 			 																				E->ens_max_speed[i][j], E->ens_max_radius[i][j], E->ens_vortexParameters[i][j]);
 			}
-			fprintf(E->outFile,"\n");
+			fprintf(tracks,"\n");
 		}
-		fclose(E->outFile);
+		fclose(tracks);
+
 
 		// now have the three day track lenths, lat and lon positions of each
 		// also have the roms grid reference
@@ -82,6 +88,8 @@ int main(int argc,char **argv)
 				E->is_inside[i][j] = pnpoly(E->polygon, E->ncoords, pt);
 			}
 		}
+
+		/*
 		// check with gnuplot
 	  FILE  *ini;
 	  ini = fopen("inside.txt","w");
@@ -93,32 +101,23 @@ int main(int argc,char **argv)
 			fprintf(ini,"\n");
 	  }
 	  fclose(ini);
+		*/
 
 		// now, for each point iside the polygon find the closest grid point to the
 		// min and max latitudes and longitudes from the track point swarm
-		E->min_lon = 99999.0;
-		E->max_lon = -99999.0;
-		E->min_lat = 99999.0;
-		E->max_lat = -99999.0;
+
 		count = 0;
 		for(i=0;i<E->n_ens;i++){
 			for(j=0;j<E->three_days;j++){
 				if(E->is_inside[i][j] == TRUE){
 					 count++;
-	    		 if(E->ens_lon[i][j] < E->min_lon) E->min_lon = E->ens_lon[i][j];
-					 if(E->ens_lon[i][j] > E->max_lon) E->max_lon = E->ens_lon[i][j];
-					 if(E->ens_lat[i][j] < E->min_lat) E->min_lat = E->ens_lat[i][j];
-					 if(E->ens_lat[i][j] > E->max_lat) E->max_lat = E->ens_lat[i][j];
 				}
 			}
 	  }
-		printf("min lon = %f, max lon = %f\n", E->min_lon, E->max_lon);
-		printf("min lat = %f, max lat = %f\n", E->min_lat, E->max_lat);
 		E->number_of_points_inside = count;
-		printf("number of points inside = %d\n", E->number_of_points_inside);
+		//printf("number of points inside = %d\n", E->number_of_points_inside);
 		E->i_index = malloc(E->number_of_points_inside*sizeof(int));
 		E->j_index = malloc(E->number_of_points_inside*sizeof(int));
-
 
 
 		// use the kdtree to find the closes roms_grid point to the current track point
@@ -126,8 +125,7 @@ int main(int argc,char **argv)
 		count = 0;
 		min_j = 32768;
 		max_j = 0;
-		double	pos[2];
-		grid_index		*idx;
+
 		for(i=0;i<E->n_ens;i++){
 			for(j=0;j<E->three_days;j++){
 				if(E->is_inside[i][j] == TRUE){
@@ -145,7 +143,6 @@ int main(int argc,char **argv)
 				    // print out the retrieved data
 				    //printf( "pos at (%.3f, %.3f) idx = %d %d\n", pos[0], pos[1], idx->i, idx->j );
 
-
 						// store the smallest index
 						if(idx->j < min_j) min_j = idx->j;
 						// store the biggest index
@@ -153,21 +150,27 @@ int main(int argc,char **argv)
 
 				    // go to the next entry
 				    kd_res_next( E->set );
-				}
-				count++;
-		 	 //printf("count = %d (outof %d total)\n", count, E->number_of_points_inside);
- 			}
+				  }
+					count++;
+		 	 		//printf("count = %d (outof %d total)\n", count, E->number_of_points_inside);
+ 				}
+			}
 		}
-	}
-
-
 
 		printf("min index = %d, max index = %d\n", min_j, max_j);
+		printf("E->nXiRho = %d, E->nEtaRho = %d\n", E->nXiRho, E->nEtaRho);
+		// apply E->padding cells to the min and max indexes
+		min_j -= (int)E->padding;
+		max_j += (int)E->padding;
+		// check the bounds
+		min_j = max(min_j,0);
+		max_j = min(max_j,E->nXiRho-1);
 
-		printf("ncks -d xi_rho,%d,%d -d eta_rho,0,%d %s -O cut.nc\n", min_j, max_j, E->nLonRho-1, E->roms_grid);
 
-
-		printf("plot \"AustraliaContinentOutline.txt\" u 2:1 w l, \"%s\" u 3:2 w l\n", E->output_file);
+		// use the nco tool ncks to cut out this grid from the cource grid
+		sprintf(cut_string,"ncks -d xi_rho,%d,%d -d eta_rho,0,%d %s -O %s\n", min_j, max_j, E->nEtaRho-1, E->roms_grid, E->output_file);
+		printf("%s\n", cut_string);
+		system(cut_string);
 
 		kd_res_free(E->set);
 		kd_free(E->kd);

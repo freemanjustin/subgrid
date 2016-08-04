@@ -166,9 +166,21 @@ int main(int argc,char **argv)
 		min_j = max(min_j,0);
 		max_j = min(max_j,E->nXiRho-1);
 
+		/*
+		xi_rho = 785 ;
+        xi_u = 784 ;
+        xi_v = 785 ;
+        xi_psi = 784 ;
+        eta_rho = 117 ;
+        eta_u = 117 ;
+        eta_v = 116 ;
+        eta_psi = 116 ;
+        one = 1 ;
+			*/
 
 		// use the nco tool ncks to cut out this grid from the cource grid
-		sprintf(cut_string,"ncks -d xi_rho,%d,%d -d eta_rho,0,%d %s -O %s\n", min_j, max_j, E->nEtaRho-1, E->roms_grid, E->output_file);
+		sprintf(cut_string,"ncks -4 -L 1 -d xi_rho,%d,%d -d xi_u,%d,%d -d xi_v,%d,%d -d xi_psi,%d,%d %s -O %s\n",
+										min_j, max_j, min_j, max_j-1, min_j, max_j, min_j, max_j-1, E->roms_grid, E->output_file);
 		printf("%s\n", cut_string);
 		system(cut_string);
 

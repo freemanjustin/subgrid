@@ -115,6 +115,14 @@ int main(int argc,char **argv)
 			}
 	  }
 		E->number_of_points_inside = count;
+
+		// check to see if any points are inside our grid
+		if(E->number_of_points_inside == 0){
+			fprintf(stderr,"No tracks intersect the source ROMS grid.\n");
+			fprintf(stderr,"Nothing to do, and you do not need to run the model.\n");
+			exit(0);	// maybe exit with a non-zero status? but this is not an error...
+		}
+
 		//printf("number of points inside = %d\n", E->number_of_points_inside);
 		E->i_index = malloc(E->number_of_points_inside*sizeof(int));
 		E->j_index = malloc(E->number_of_points_inside*sizeof(int));

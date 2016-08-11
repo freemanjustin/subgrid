@@ -74,8 +74,9 @@ for i in range(0,1):
 
 
     colorMap=mpl.cm.Paired
+    #colorMap=mpl.cm.bone
     nlevs = 256
-    clevs = np.linspace(2,4765,num=nlevs)
+    clevs = np.linspace(2,4865,num=nlevs)
 
     basemap.drawmapboundary(fill_color='#FFFFFF')
     basemap.fillcontinents(color='#000000',lake_color='#000000')
@@ -88,6 +89,8 @@ for i in range(0,1):
 
     data = np.loadtxt('tracks.dat',dtype=np.str,delimiter=' ')
     color=iter(cm.gist_ncar(np.linspace(0,1,1001)))
+    #color=iter(cm.winter(np.linspace(0,1,1001)))
+    #c=next(color)
     for j in range(0, 1000):
         start = (j*72)
         print data[start,0]
@@ -98,7 +101,7 @@ for i in range(0,1):
         x, y = basemap(longitude,latitude)
         c=next(color)
         label = "Ensemble member %d" % (j+1)
-        plt.plot(x,y,'o-',c=c,linewidth=2, label=label)
+        plt.plot(x,y,'-o',c=c,linewidth=1, label=label,  alpha=0.8)
 
 
     fname = "roms_cut_%02d" % i

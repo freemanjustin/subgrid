@@ -19,6 +19,12 @@ void get_command_line_arg_as_int(int *variable, char *cli_input){
 	sscanf(cli_input,"%d",variable);
 }
 
+void get_command_line_arg_as_double(double *variable, char *cli_input){
+
+	sscanf(cli_input,"%lf",variable);
+}
+
+
 double ****malloc4d_double(int dim1, int dim2, int dim3, int dim4)
 {
 	size_t		layer1_count = dim1;

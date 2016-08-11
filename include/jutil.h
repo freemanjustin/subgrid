@@ -55,6 +55,7 @@ extern char *lr_pack( char* );
 extern char *strip_slash_n( char* );
 extern void get_command_line_arg_as_string( char**, char* );
 extern void get_command_line_arg_as_int( int*, char* );
+extern void get_command_line_arg_as_double(double*, char*);
 
 /* math utils */
 /* round_double is named to avoid potential namespace clashes with the c99 function round() */

@@ -24,13 +24,14 @@ int main(int argc,char **argv)
 
 	// parse command line arguments
 	if(argc < 4){
-		printf("need an input TCxml file, a reference roms grid and an output (netcdf) filename\n");
+		printf("need an input TCxml file, a reference roms grid, a (double) padding value and an output (netcdf) filename\n");
         exit(1);
 	}
 	else{
 		get_command_line_arg_as_string(&E->input_xml, argv[1]);
 		get_command_line_arg_as_string(&E->roms_grid, argv[2]);
-		get_command_line_arg_as_string(&E->output_file, argv[3]);
+		get_command_line_arg_as_double(&E->padding, argv[3]);
+		get_command_line_arg_as_string(&E->output_file, argv[4]);
 	}
 
     // initialize struct members

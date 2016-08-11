@@ -20,7 +20,7 @@ void get_grid_boundary(e *E){
   E->average_distance_per_index = E->average_distance_per_index/(E->nXiRho-1);
   E->average_distance_per_index = E->average_distance_per_index/1000.0; // convert to kilometres
   printf("E->average_distance_per_index = %f km\n", E->average_distance_per_index);
-  E->padding = 1000.0/E->average_distance_per_index;
+  E->padding = E->padding/E->average_distance_per_index;
   printf("E->padding = %d cells\n", (int)E->padding);
 
 
